@@ -31,13 +31,15 @@ begin
 		if (reset = ACTIVE) then
 			count := 0;
 		elsif (rising_edge(clock)) then
-			if (moveLeftEn = ACTIVE) then
-				if (count /= 15) then
-					count := count + 1;
-				end if;
-			elsif (moveRightEn = ACTIVE) then
-				if (count /= 0) then
-					count := count - 1;
+			if (moveLeftEn /= ACTIVE or moveRightEn /= ACTIVE) then
+				if (moveLeftEn = ACTIVE) then
+					if (count /= 15) then
+						count := count + 1;
+					end if;
+				elsif (moveRightEn = ACTIVE) then
+					if (count /= 0) then
+						count := count - 1;
+					end if;
 				end if;
 			end if;
 		end if;
