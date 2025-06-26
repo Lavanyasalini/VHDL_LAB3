@@ -48,8 +48,6 @@ begin
 
 	ledNum <= ledIndex;
 
-	leds(to_integer(unsigned(ledIndex))) <= ACTIVE;
-
 	LED_DRIVER: process(ledIndex)
 
 		variable temp: std_logic_vector(15 downto 0);
