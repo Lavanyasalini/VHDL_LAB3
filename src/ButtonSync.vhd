@@ -31,7 +31,6 @@ architecture ButtonSync_ARCH of ButtonSync is
 
 begin
 
-
 	SYNC_BUTTON: process(reset, clock)
 	begin
 
