@@ -9,7 +9,7 @@ entity MovingLed_BASYS3 is
 		btnL: in std_logic;
 		btnR: in std_logic;
 		led: out std_logic_vector(15 downto 0);
-		segs: out std_logic_vector(6 downto 0);
+		seg: out std_logic_vector(6 downto 0);
 		dp: out std_logic;
 		an: out std_logic_vector(3 downto 0)
 	);
@@ -128,7 +128,7 @@ begin
     --  Convert 4-bit binary value into its equivalent 7-segment pattern
     --============================================================================
     BINARY_TO_7SEG: with ledNum select
-        segs <= ZERO_7SEG  when "0000",
+        seg <= ZERO_7SEG  when "0000",
                      ONE_7SEG   when "0001",
                      TWO_7SEG   when "0010",
                      THREE_7SEG when "0011",

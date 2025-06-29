@@ -45,6 +45,8 @@ begin
 
 			if (syncedButton = ACTIVE and prevButtonValue /= ACTIVE) then
 				buttonPulse <= ACTIVE;
+			else
+				buttonPulse <= not ACTIVE;
 			end if;
 
 			prevButtonValue <= syncedButton;
