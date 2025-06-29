@@ -29,15 +29,20 @@ architecture ButtonSync_ARCH of ButtonSync is
 	-- constants
 	constant ACTIVE: std_logic := '1';
 
+	-- internal signals
+	signal holdButtonState: std_logic;
+
 begin
 
 	SYNC_BUTTON: process(reset, clock)
 	begin
 
 		if (reset = ACTIVE) then
+			holdButtonState <= not ACTIVE;
 			syncedButton <= not ACTIVE;
 		elsif (rising_edge(clock)) then
-			syncedButton <= button;
+			holdButtonState <= button;
+			syncedButton <= holdButtonState;
 		end if;
 
 	end process;
