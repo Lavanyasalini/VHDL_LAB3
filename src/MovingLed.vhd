@@ -30,37 +30,33 @@ architecture MovingLed_ARCH of MovingLed is
 	constant ACTIVE: std_logic := '1';
 
 	-- internal signals
-	signal ledIndex: std_logic_vector(3 downto 0);
+	signal ledIndex: unsigned(3 downto 0);
 
 begin
 
 	LED_INDEXER: process(reset, clock)
 
-		variable count: integer range 0 to 15;
-
 	begin
 
 		if (reset = ACTIVE) then
-			count := 0;
+			ledIndex <= (others => '0');
 		elsif (rising_edge(clock)) then
 			if (not (moveLeftEn = ACTIVE and moveRightEn = ACTIVE)) then
 				if (moveLeftEn = ACTIVE) then
-					if (count /= 15) then
-						count := count + 1;
+					if (ledIndex /= 15) then
+						ledIndex <= ledIndex + 1;
 					end if;
 				elsif (moveRightEn = ACTIVE) then
-					if (count /= 0) then
-						count := count - 1;
+					if (ledIndex /= 0) then
+						ledIndex <= ledIndex - 1;
 					end if;
 				end if;
 			end if;
 		end if;
 
-		ledIndex <= std_logic_vector(to_unsigned(count, 4));
-
 	end process;
 
-	ledNum <= ledIndex;
+	ledNum <= std_logic_vector(ledIndex);
 
 	LED_DRIVER: process(ledIndex)
 
