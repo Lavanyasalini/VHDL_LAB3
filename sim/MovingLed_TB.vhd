@@ -1,14 +1,3 @@
---
--- Name: 
--- Authors: 
---
---     Test bench file for the MovingLed component. This testbench applies all
---     32 possible signal combinations to the leftBtn, rightBtn, and numValue
---     inputs to verify the functionality of the seven-segment display and LED
---     array drivers.
---
-----------------------------------------------------------------------------------
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use ieee.numeric_std.all;
@@ -18,8 +7,58 @@ end MovingLed_TB;
 
 architecture MovingLed_TB_ARCH of MovingLed_TB is
 
-	----general definitions----------------------------------------------CONSTANTS
+	-- constants
 	constant ACTIVE: std_logic := '1';
+
+	-- test types declaration
+	type testRecord_t is record
+		moveLeftEn: std_logic;
+		moveRightEn: std_logic;
+	end record;
+	type testArray_t is array(natural range <>) of testRecord_t;
+
+	-- test-vectors
+	constant TEST_VECTORS: testArray_t := (
+		--moveLeftEn--moveRightEn---
+		(     '0',       '1'    ), -- try to move right from zero
+		-- go all the left
+		(     '1',       '0'    ),
+		(     '1',       '0'    ),
+		(     '1',       '0'    ),
+		(     '1',       '0'    ),
+		(     '1',       '0'    ),
+		(     '1',       '0'    ),
+		(     '1',       '0'    ),
+		(     '1',       '0'    ),
+		(     '1',       '0'    ),
+		(     '1',       '0'    ),
+		(     '1',       '0'    ),
+		(     '1',       '0'    ),
+		(     '1',       '0'    ),
+		(     '1',       '0'    ),
+		(     '1',       '0'    ),
+		(     '1',       '0'    ),
+		-- try going left at wall
+		(     '1',       '0'    ),
+		-- go near mid point (led(7))
+		(     '0',       '1'    ),
+		(     '0',       '1'    ),
+		(     '0',       '1'    ),
+		(     '0',       '1'    ),
+		(     '0',       '1'    ),
+		(     '0',       '1'    ),
+		(     '0',       '1'    ),
+		(     '0',       '1'    ),
+		-- try both buttons
+		(     '1',       '1'    ),
+		-- do nothing (should be same as above)
+		(     '0',       '0'    ),
+		-- little dance
+		(     '1',       '0'    ),
+		(     '0',       '1'    ),
+		(     '0',       '1'    ),
+		(     '1',       '0'    )
+);
 
 	-- UUT
 	component MovingLed
@@ -77,20 +116,21 @@ begin
 	end process SYSTEM_CLOCK;
 
 	INPUT_DRIVER: process(reset, clock)
-		variable inputVector : std_logic_vector(1 downto 0);
+		variable index: natural;
 
 	begin
 
 		if (reset = ACTIVE) then
-			inputVector := (others => '0');
+			moveLeftEn <= not ACTIVE;
+			moveRightEn <= not ACTIVE;
+			index := 0;
 		elsif (rising_edge(clock)) then
-			if (inputVector /= "11") then
-				inputVector := std_logic_vector(unsigned(inputVector) + 1);
+			if (index < TEST_VECTORS'Length) then
+				moveLeftEn <= TEST_VECTORS(index).moveLeftEn;
+				moveRightEn <= TEST_VECTORS(index).moveRightEn;
+				index := index + 1;
 			end if;
 		end if;
-
-		moveLeftEn <= inputVector(1);
-		moveRightEn <= inputVector(0);
 	end process;
 
 end MovingLed_TB_ARCH;
