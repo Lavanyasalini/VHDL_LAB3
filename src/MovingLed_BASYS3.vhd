@@ -144,7 +144,7 @@ begin
 	--============================================================================
 
 	-- Set constant signal
-	dp <= ACTIVE;
+	dp <= not ACTIVE;
 
 	CONVERT_TO_BCD: process(ledNum)
 	begin
@@ -153,7 +153,7 @@ begin
 			digit0 <= std_logic_vector(ledNum);
 		else
 			digit1 <= "0001";
-			digit0 <= std_logic_vector(ledNum mod 10);
+			digit0 <= std_logic_vector(ledNum - 10);
 		end if;
 	end process;
 
