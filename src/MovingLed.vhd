@@ -20,7 +20,7 @@ entity MovingLed is
 		clock: in std_logic;
 
 		leds: out std_logic_vector(15 downto 0);
-		ledNum: out std_logic_vector(3 downto 0)
+		ledNum: out unsigned(3 downto 0)
 	);
 end MovingLed;
 
@@ -56,7 +56,7 @@ begin
 
 	end process;
 
-	ledNum <= std_logic_vector(ledIndex);
+	ledNum <= ledIndex;
 
 	LED_DRIVER: process(ledIndex)
 

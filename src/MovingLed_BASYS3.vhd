@@ -17,19 +17,24 @@ end MovingLed_BASYS3;
 
 architecture MovingLed_BASYS3_ARCH of MovingLed_BASYS3 is
 
-	-- constants
-	constant ACTIVE: std_logic:= '1';
+	----constants----------------------------------------------------------
+	constant ACTIVE: std_logic:= '0';
 
-	-- internal signals
+	----internal connections-----------------------------------------------
+	-- button related
 	signal syncedLeftButton: std_logic;
 	signal syncedRightButton: std_logic;
-
 	signal moveLeftEn: std_logic;
 	signal moveRightEn: std_logic;
 
-	signal ledNum: std_logic_vector(3 downto 0);
+	-- uut related
+	signal ledNum: unsigned(3 downto 0);
 
-	-- components
+	-- segment related
+	signal digit1: std_logic_vector(3 downto 0);
+	signal digit0: std_logic_vector(3 downto 0);
+
+	----components---------------------------------------------------------
 	component MovingLed
 		port (
 			moveLeftEn: in std_logic;
@@ -38,7 +43,7 @@ architecture MovingLed_BASYS3_ARCH of MovingLed_BASYS3 is
 			clock: in std_logic;
 
 			leds: out std_logic_vector(15 downto 0);
-			ledNum: out std_logic_vector(3 downto 0)
+			ledNum: out unsigned(3 downto 0)
 		);
 	end component;
 
@@ -62,25 +67,31 @@ architecture MovingLed_BASYS3_ARCH of MovingLed_BASYS3 is
 		);
 	end component;
 
-	----normal seven segment display-------------------------------------CONSTANTS
-    constant ZERO_7SEG: std_logic_vector(6 downto 0)  := "1000000";
-    constant ONE_7SEG: std_logic_vector(6 downto 0)   := "1111001";
-    constant TWO_7SEG: std_logic_vector(6 downto 0)   := "0100100";
-    constant THREE_7SEG: std_logic_vector(6 downto 0) := "0110000";
-    constant FOUR_7SEG: std_logic_vector(6 downto 0)  := "0011001";
-    constant FIVE_7SEG: std_logic_vector(6 downto 0)  := "0010010";
-    constant SIX_7SEG: std_logic_vector(6 downto 0)   := "0000010";
-    constant SEVEN_7SEG: std_logic_vector(6 downto 0) := "1111000";
-    constant EIGHT_7SEG: std_logic_vector(6 downto 0) := "0000000";
-    constant NINE_7SEG: std_logic_vector(6 downto 0)  := "0011000";
-    constant A_7SEG: std_logic_vector(6 downto 0)     := "0001000";
-    constant B_7SEG: std_logic_vector(6 downto 0)     := "0000011";
-    constant C_7SEG: std_logic_vector(6 downto 0)     := "1000110";
-    constant D_7SEG: std_logic_vector(6 downto 0)     := "0100001";
-    constant E_7SEG: std_logic_vector(6 downto 0)     := "0000110";
-    constant F_7SEG: std_logic_vector(6 downto 0)     := "0001110";
+	component SevenSegmentDriver
+		port (
+			reset: in std_logic;
+			clock: in std_logic;
+
+			digit3: in std_logic_vector(3 downto 0);    --leftmost digit
+			digit2: in std_logic_vector(3 downto 0);    --2nd from left digit
+			digit1: in std_logic_vector(3 downto 0);    --3rd from left digit
+			digit0: in std_logic_vector(3 downto 0);    --rightmost digit
+
+			blank3: in std_logic;    --leftmost digit
+			blank2: in std_logic;    --2nd from left digit
+			blank1: in std_logic;    --3rd from left digit
+			blank0: in std_logic;    --rightmost digit
+
+			sevenSegs: out std_logic_vector(6 downto 0);    --MSB=g, LSB=a
+			anodes:    out std_logic_vector(3 downto 0)    --MSB=leftmost digit
+	);
+	end component;
 
 begin
+
+	--============================================================================
+	--  Button synchronization and pulsing
+	--============================================================================
 
 	LEFT_BUTTON_SYNC: ButtonSync
 		port map (
@@ -114,6 +125,10 @@ begin
 			buttonPulse => moveRightEn
 		);
 
+	--============================================================================
+	--  Actual logic
+	--============================================================================
+
 	UUT: MovingLed
 		port map (
 			moveLeftEn => moveLeftEn,
@@ -124,28 +139,41 @@ begin
 			ledNum => ledNum
 		);
 
-    --============================================================================
-    --  Convert 4-bit binary value into its equivalent 7-segment pattern
-    --============================================================================
-    BINARY_TO_7SEG: with ledNum select
-        seg <= ZERO_7SEG  when "0000",
-                     ONE_7SEG   when "0001",
-                     TWO_7SEG   when "0010",
-                     THREE_7SEG when "0011",
-                     FOUR_7SEG  when "0100",
-                     FIVE_7SEG  when "0101",
-                     SIX_7SEG   when "0110",
-                     SEVEN_7SEG when "0111",
-                     EIGHT_7SEG when "1000",
-                     NINE_7SEG  when "1001",
-                     A_7SEG     when "1010",
-                     B_7SEG     when "1011",
-                     C_7SEG     when "1100",
-                     D_7SEG     when "1101",
-                     E_7SEG     when "1110",
-                     F_7SEG     when others;
+	--============================================================================
+	--  Segment related code
+	--============================================================================
 
-	dp <= not ACTIVE;
-	an <= "1110";
+	-- Set constant signal
+	dp <= ACTIVE;
+
+	CONVERT_TO_BCD: process(ledNum)
+	begin
+		if (ledNum < 10) then
+			digit1 <= (others => '0');
+			digit0 <= std_logic_vector(ledNum);
+		else
+			digit1 <= "0001";
+			digit0 <= std_logic_vector(ledNum mod 10);
+		end if;
+	end process;
+
+	SEGMENT_DRIVER: SevenSegmentDriver
+		port map (
+			reset => reset,
+			clock => clk,
+
+			digit3 => std_logic_vector(ledNum),
+			digit2 => (others => not ACTIVE),
+			digit1 => digit1,
+			digit0 => digit0,
+
+			blank3 => ACTIVE,
+			blank2 => not ACTIVE,
+			blank1 => ACTIVE,
+			blank0 => ACTIVE,
+
+			sevenSegs => seg,
+			anodes => an
+	);
 
 end MovingLed_BASYS3_ARCH;
