@@ -42,6 +42,10 @@ architecture MovingLed_BASYS3_ARCH of MovingLed_BASYS3 is
     signal digit1: std_logic_vector(3 downto 0);  -- decimal tens
     signal digit0: std_logic_vector(3 downto 0);  -- decimal ones
 
+    signal tempDigits: std_logic_vector(7 downto 0);
+    signal currentLED: std_logic_vector(7 downto 0);
+
+
     signal sevenSegs: std_logic_vector(6 downto 0);
     signal anodes:    std_logic_vector(3 downto 0);
 
@@ -94,14 +98,20 @@ architecture MovingLed_BASYS3_ARCH of MovingLed_BASYS3 is
     end component;
 
     -- BCD function for 0-15
-    function to_bcd_4bit(inputValue: integer) return std_logic_vector is
-        variable tens: integer;
-        variable ones: integer;
+    function to_bcd_8bit(inputValue: integer) return std_logic_vector is
+        variable tensValue: integer;
+        variable onesValue: integer;
     begin
-        tens := inputValue / 10;
-        ones := inputValue mod 10;
-        return std_logic_vector(to_unsigned(tens,4)) & std_logic_vector(to_unsigned(ones,4));
-    end function;
+        if (inputValue < 99) then
+            tensValue := inputValue / 10;
+            onesValue := inputValue mod 10;
+        else
+            tensValue := 9;
+            onesValue := 9;
+        end if;
+        return std_logic_vector(to_unsigned(tensValue, 4))
+               & std_logic_vector(to_unsigned(onesValue, 4));
+    end to_bcd_8bit;
 
 begin
     -- button synchronizers
@@ -155,10 +165,9 @@ begin
     digit3 <= std_logic_vector(ledNum);  -- hex display
     digit2 <= (others => not ACTIVE);    -- blank second from left
     -- decimal using BCD
-    signal bcd_digits: std_logic_vector(7 downto 0);
-    bcd_digits <= to_bcd_4bit(to_integer(ledNum));
-    digit1 <= bcd_digits(7 downto 4);
-    digit0 <= bcd_digits(3 downto 0);
+	tempDigits <= to_bcd_8bit(to_integer(unsigned(currentLed)));
+	digit1 <= tempDigits(7 downto 4);    -- tens place
+	digit0 <= tempDigits(3 downto 0);    -- ones place);
 
     -- seven segment driver
     SEVEN_SEG_DRIVER: SevenSegmentDriver
